@@ -1,0 +1,30 @@
+# Documentation
+# https://docs.gitlab.com/ee/ci/yaml/
+
+stages:
+- test
+- deploy
+
+test:
+  stage: test
+  before_script:
+   - git submodule sync --recursive
+   - git submodule update --init --recursive
+   - nvm i
+   - npm i
+  script:
+   - npm run lint
+   - npm run test
+   - npm run ng -- build web-marble-marcher --prod --progress=false
+
+  artifacts:
+    paths:
+    - dist/web-marble-marcher/
+    expire_in: 1337 mins
+
+deploy_master:
+  stage: deploy
+  script:
+     - rsync --delete -rlvvzhe ssh $CI_PROJECT_DIR/dist/web-marble-marcher/ akehir@192.168.7.111:/app/web/projects/web-marble-marcher/master/ # syncronize from build server to local via rsync
+  only:
+  - master
