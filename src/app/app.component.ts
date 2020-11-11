@@ -2,7 +2,7 @@ import { AfterViewInit, Component, OnDestroy, ViewEncapsulation } from '@angular
 import { ShaderService } from '@triangular/shader';
 import { MarbleMarcherFragmentShader } from './shaders';
 import { MarbleMarcherVertexShader } from './shaders';
-import { shareReplay, take, tap } from 'rxjs/operators';
+import { delay, shareReplay, take, tap } from 'rxjs/operators';
 import { Level } from './types';
 import { identity, lookAt } from './util';
 import {
@@ -32,6 +32,7 @@ import {
   Level24,
 } from './levels';
 import { BehaviorSubject, combineLatest, Observable, ReplaySubject } from 'rxjs';
+import { Program } from '@triangular/shader/lib/common';
 
 @Component({
   selector: 'app-root',
@@ -72,16 +73,9 @@ export class AppComponent implements OnDestroy, AfterViewInit {
     Level24,
   ];
 
-  program$ = this.shader.createProgram(
-    'marble-marcher',
-    MarbleMarcherVertexShader,
-    MarbleMarcherFragmentShader,
-  ).pipe(
-    take(1),
-    shareReplay(1),
-  );
+  program$: Observable<Program>;
 
-  level$ = new BehaviorSubject<Level>(Level22);
+  level$ = new ReplaySubject<Level>(1);
 
   private keyboardListener: (e: KeyboardEvent) => void;
 
@@ -150,10 +144,22 @@ export class AppComponent implements OnDestroy, AfterViewInit {
     // initializing all the streams we're interested in.
     // this is where the magic happens!
 
+    this.program$ = this.shader.createProgram(
+      'marble-marcher',
+      MarbleMarcherVertexShader,
+      MarbleMarcherFragmentShader,
+    ).pipe(
+      take(1),
+      shareReplay(1),
+    );
+
+    this.level$.next(Level22);
+
     combineLatest([
       this.program$,
-      this.level$,
+      this.level$.asObservable(),
     ]).pipe(
+      delay(16),
       tap(([program, level]) => {
 
         this.start = false;

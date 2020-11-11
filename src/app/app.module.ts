@@ -7,7 +7,7 @@ import { ShaderModule, ShaderService } from '@triangular/shader';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
   ],
     imports: [
         BrowserModule,

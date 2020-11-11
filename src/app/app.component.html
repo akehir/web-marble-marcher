@@ -1,4 +1,4 @@
-<main *ngIf="menu">
+<main [ngClass]="{'hidden': !menu }">
   <h1>{{ title }}</h1>
   <section>
     <h2>Levels</h2>
@@ -8,13 +8,12 @@
   <section>
     <h2>Source Code</h2>
     <p>
-      The source code is published at <a href="https://git.akehir.com/akehir/fluid-simulation">akehir.com</a> and mirrored on <a href="https://github.com/akehir/fluid-simulation">Github</a>.
+      The source code is published at <a href="https://git.akehir.com/akehir/web-marble-marcher">akehir.com</a> and mirrored on <a href="https://github.com/akehir/web-marble-marcher">Github</a>.
     </p>
-    <p>The package ist published to npm at <a href="https://www.npmjs.com/package/@triangular/fluid-simulation">@triangular/fluid-simulation</a>.</p>
   </section>
   <section>
     <h2>License</h2>
-    <p>This project is licensed under the MIT License</p>
+    <p>This project is licensed under the GPL License</p>
   </section>
 </main>
 <webgl-shader></webgl-shader>
