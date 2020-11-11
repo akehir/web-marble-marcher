@@ -1,8 +1,8 @@
-import { Component, OnDestroy, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { ShaderService } from '@triangular/shader';
 import { MarbleMarcherFragmentShader } from './shaders';
 import { MarbleMarcherVertexShader } from './shaders';
-import { take, tap } from 'rxjs/operators';
+import { shareReplay, take, tap } from 'rxjs/operators';
 import { Level } from './types';
 import { identity, lookAt } from './util';
 import {
@@ -31,6 +31,7 @@ import {
   Level23,
   Level24,
 } from './levels';
+import { BehaviorSubject, combineLatest, Observable, ReplaySubject } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -38,7 +39,7 @@ import {
   styleUrls: [],
   encapsulation: ViewEncapsulation.None,
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent implements OnDestroy, AfterViewInit {
   title = 'web-marble-marcher';
 
   start = true;
@@ -71,22 +72,89 @@ export class AppComponent implements OnDestroy {
     Level24,
   ];
 
-  private listener: (e: KeyboardEvent) => void;
+  program$ = this.shader.createProgram(
+    'marble-marcher',
+    MarbleMarcherVertexShader,
+    MarbleMarcherFragmentShader,
+  ).pipe(
+    take(1),
+    shareReplay(1),
+  );
+
+  level$ = new BehaviorSubject<Level>(Level22);
+
+  private keyboardListener: (e: KeyboardEvent) => void;
 
   constructor(private shader: ShaderService) {}
 
   ngOnDestroy(): void {
-    window.removeEventListener('keyup', this.listener);
+    // Clean up subscriptions
+    this.level$.complete();
+
+    // remove event listeners
   }
 
+  pauseGame(): void {}
+  unPauseGame(): void {}
+
+  setExposure(): void {}
+
+  setListeners(): void {
+    // remove an
+    this.unsetListeners();
+
+    // Collect keyboard input
+    // const float force_lr =
+    //   (all_keys[sf::Keyboard::Left] || all_keys[sf::Keyboard::A] ? -1.0f : 0.0f) +
+    //   (all_keys[sf::Keyboard::Right] || all_keys[sf::Keyboard::D] ? 1.0f : 0.0f);
+    // const float force_ud =
+    //   (all_keys[sf::Keyboard::Down] || all_keys[sf::Keyboard::S] ? -1.0f : 0.0f) +
+    //   (all_keys[sf::Keyboard::Up] || all_keys[sf::Keyboard::W] ? 1.0f : 0.0f);
+
+    // Collect mouse input
+    // const sf::Vector2i mouse_delta = mouse_pos - screen_center;
+    // sf::Mouse::setPosition(screen_center, window);
+    // float ms = mouse_sensitivity;
+    // if (game_settings.mouse_sensitivity == 1) {
+    //   ms *= 0.5f;
+    // } else if (game_settings.mouse_sensitivity == 2) {
+    //   ms *= 0.25f;
+    // }
+    // const float cam_lr = float(-mouse_delta.x) * ms;
+    // const float cam_ud = float(-mouse_delta.y) * ms;
+    // const float cam_z = mouse_wheel * wheel_sensitivity;
+
+    // scene.UpdateMarble(force_lr, force_ud);
+    // scene.UpdateCamera(cam_lr, cam_ud, cam_z, mouse_clicked);
+  }
+
+  unsetListeners(): void {
+    if (this.keyboardListener) {
+      window.removeEventListener('keyup', this.keyboardListener);
+    }
+  }
+
+  toggleCameraAnimation(): void {
+
+  }
+
+  updateMarble(): void { }
+
+  updateCamera(): void {}
+
   runLevel(level: Level): void {
-    this.shader.createProgram(
-      'marble-marcher', // we always set / change the same shader program.
-      MarbleMarcherVertexShader,
-      MarbleMarcherFragmentShader,
-    ).pipe(
-      take(1),
-      tap((program) => {
+    this.level$.next(level);
+  }
+
+  ngAfterViewInit(): void {
+    // initializing all the streams we're interested in.
+    // this is where the magic happens!
+
+    combineLatest([
+      this.program$,
+      this.level$,
+    ]).pipe(
+      tap(([program, level]) => {
 
         this.start = false;
         this.menu = false;
@@ -151,7 +219,7 @@ export class AppComponent implements OnDestroy {
           u_lightColor:            [1, 1, 1, 1],
         };
 
-        let cameraPosition = [7, 7, 7];
+        let cameraPosition = [13.37, 13.37, 13.37];
         const target = [0, 0, 0];
         const up = [0, 1, 0];
         let cameraMatrix = lookAt(cameraPosition, target, up, uniformsThatAreTheSameForAllObjects.u_viewInverse);
@@ -159,18 +227,29 @@ export class AppComponent implements OnDestroy {
         program.gl.uniformMatrix4fv(iMat, false, cameraMatrix);
 
         let eclipsed = 0;
+        let cos = 0;
+
         program.step = (dt?) => {
+          // update camera
           eclipsed += dt;
-          cameraPosition = [cameraPosition[0], 1 + 7 * Math.cos(eclipsed), 1 + 7 * Math.cos(eclipsed)];
+          cos = Math.cos(eclipsed);
+          cameraPosition = [cameraPosition[0], 13.3 * cos, 13.37 * cos];
           cameraMatrix = lookAt(cameraPosition, target, up, uniformsThatAreTheSameForAllObjects.u_viewInverse);
           program.gl.uniformMatrix4fv(iMat, false, cameraMatrix);
+
+          // update fractal
+          program.gl.uniform1f(iFracScale, level.scale + .5 * cos);
+          //   shader.setUniform("iFracAng1", frac_params_smooth[1]);
+          program.gl.uniform1f(iFracAng1, level.angle1 + .5 * cos);
+          //   shader.setUniform("iFracAng2", frac_params_smooth[2]);
+          program.gl.uniform1f(iFracAng2, level.angle2 + .5 * cos);
         };
 
-        if (this.listener) {
-          window.removeEventListener('keyup', this.listener);
+        if (this.keyboardListener) {
+          window.removeEventListener('keyup', this.keyboardListener);
         }
 
-        this.listener = (e: KeyboardEvent) => {
+        this.keyboardListener = (e: KeyboardEvent) => {
           if (e.code === 'NumpadAdd') {
             cameraPosition = [cameraPosition[0] - .1, cameraPosition[1] - .1, cameraPosition[2] - .1];
             // cameraPosition = [7, cameraPosition[1] + 1, 7];
@@ -184,7 +263,7 @@ export class AppComponent implements OnDestroy {
           }
         };
 
-        window.addEventListener('keyup', this.listener);
+        window.addEventListener('keyup', this.keyboardListener);
       }),
     ).subscribe();
   }
