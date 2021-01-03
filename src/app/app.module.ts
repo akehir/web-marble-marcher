@@ -14,7 +14,7 @@ import { ShaderModule, ShaderService } from '@triangular/shader';
         AppRoutingModule,
         ShaderModule.forRoot({
           RESIZE: true,
-          SCREENSHOT_KEY_CODE: 'KeyS',
+          SCREENSHOT_KEY_CODE: 'KeyP',
         }),
     ],
   providers: [ShaderService],

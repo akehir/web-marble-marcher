@@ -46,6 +46,20 @@ export function subtractVectors(a, b, dst?: Float32Array): Float32Array {
   return dst;
 }
 
+/**
+ * adds 2 vectors3s
+ * @param a a
+ * @param b b
+ * @param dst optional vector3 to store result
+ * @return  dst or new Vector3 if not provided
+ */
+export function addVectors(a, b,  dst?: Float32Array): Float32Array {
+  dst = dst || new Float32Array(3);
+  dst[0] = a[0] + b[0];
+  dst[1] = a[1] + b[1];
+  dst[2] = a[2] + b[2];
+  return dst;
+}
 
 /**
  * Computes the cross product of 2 vectors3s
@@ -144,4 +158,16 @@ export function identity(dst?: Float32Array): Float32Array {
   dst[15] = 1;
 
   return dst;
+}
+
+
+/**
+ * Computes the dot product of two vectors; assumes both vectors have
+ * three entries.
+ * @param a Operand vector.
+ * @param b Operand vector.
+ * @return dot product
+ */
+export function dot(a: Float32Array, b: Float32Array): number {
+  return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
 }

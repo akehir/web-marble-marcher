@@ -2,6 +2,7 @@ import { Coordinate } from './coordinate';
 
 
 export interface Level {
+  params: number[];
   scale: number;
   angle1: number;
   angle2: number;

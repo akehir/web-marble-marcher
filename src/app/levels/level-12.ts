@@ -17,6 +17,7 @@ import { Level } from '../types';
    ---------------------------------------------------------------------------------------- */
 
 export const Level12: Level = {
+  params: [],
   scale: 1.6,
   angle1: 3.77,
   angle2: 3.93,

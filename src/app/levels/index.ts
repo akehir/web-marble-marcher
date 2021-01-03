@@ -22,3 +22,4 @@ export * from './level-21';
 export * from './level-22';
 export * from './level-23';
 export * from './level-24';
+export * from './all-levels';

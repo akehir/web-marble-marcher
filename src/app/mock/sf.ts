@@ -1,0 +1,50 @@
+
+// Mocking some SF
+export const sf = {
+  RenderStates: {
+    Default: {
+      shader: {},
+    },
+  },
+  sleep: (seconds: number) => {},
+  Event: {
+    Closed: 0,
+    LostFocus: 1,
+    KeyPressed: 2,
+    KeyReleased: 3,
+    MouseButtonPressed: 4,
+    MouseButtonReleased: 5,
+    MouseMoved: 6,
+    MouseWheelScrolled: 7,
+  },
+  Mouse: {
+    setPosition: (pos: {x: number, y: number}) => {},
+    Left: 0,
+    Right: 1,
+  },
+  Keyboard: {
+    KeyCount: 99,
+    Escape: 'Escape',
+    R: 'KeyR',
+    F1: 'Digit1',
+    C: 'KeyC',
+    F: 'KeyFg',
+    G: 'KeyG',
+    H: 'KeyH',
+    I: 'KeyI',
+    M: 'KeyM',
+    P: 'KeyP',
+    Z: 'KeyZ',
+    Num9: 'Numpad90',
+    Num0: 'Numpad0',
+    Num1: 'Numpad1',
+    Up: 'ArrowUp',
+    Down: 'ArrowDown',
+    Left: 'ArrowLeft',
+    Right: 'ArrowRight',
+    W: 'KeyW',
+    S: 'KeyS',
+    A: 'KeyA',
+    D: 'KeyD',
+  },
+};

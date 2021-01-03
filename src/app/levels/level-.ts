@@ -4,7 +4,7 @@ import { Level } from '../types';
 
    ---------------------------------------------------------------------------------------- */
 
-export const Level3: Level = {
+export const LevelX: Level = {
   scale: ,
   angle1: ,
   angle2: ,
