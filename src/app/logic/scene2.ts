@@ -143,14 +143,16 @@ export class Scene2 {
     this.SetLevel(level);
     this.marble_pos = new Vector3f(this.level_copy.marble.position);
     this.marble_rad = this.level_copy.marble.radius;
+    this.marble_vel = new Vector3f();
     this.flag_pos =  new Vector3f(this.level_copy.flag.position);
     this.cam_look_x = this.level_copy.marble.direction;
+    this.ResetLevel();
   }
 
   SetMarble(x: number, y: number, z: number, r: number): void {
     this.marble_rad = r;
     this.marble_pos = new Vector3f(x, y, z); // = [x, y, z];
-    this.marble_vel = new Vector3f(0, 0, 0); // = [0,0,0];
+    this.marble_vel = new Vector3f(); // = [0,0,0];
   }
 
   SetFlag(x: number, y: number, z: number): void {
@@ -164,7 +166,7 @@ export class Scene2 {
     this.marble_pos = new Vector3f(this.level_copy.marble.position);
     this.marble_vel = new Vector3f();
     this.marble_rad = this.level_copy.marble.radius;
-    this.marble_mat = new Vector3f();
+    this.marble_mat = new Vector3f(1, 1, 1) ;
     this.flag_pos = new Vector3f(this.level_copy.flag.position);
     this.cam_look_x = this.level_copy.marble.direction;
     this.cam_look_x_smooth = this.cam_look_x;
@@ -211,7 +213,7 @@ export class Scene2 {
     const sn = Math.sin(this.cam_look_x);
     const v = new Vector3f(dx * cs - dy * sn, 0.0, -dy * cs - dx * sn);
     // const v = new Vector3f(1, 1, 1);
-    this.marble_vel = this.marble_vel.addMatrix(this.marble_mat.multiplyMatrix(v).multiply(f));
+    this.marble_vel = this.marble_vel.addMatrix(v.multiply(f));
     // this.marble_vel = this.marble_vel.addMatrix(v);
 
     // Apply friction
@@ -239,7 +241,7 @@ export class Scene2 {
 
     // Check if marble passed the death barrier
     if (this.marble_pos.y < this.level_copy.flag.death) {
-      // this.ResetLevel();
+      this.ResetLevel();
     }
   }
 
@@ -290,7 +292,7 @@ export class Scene2 {
   }
 
 
-  MarbleCollision(delta_v: number): boolean {
+  MarbleCollision(delta_v: number): boolean { // todo: cpp code has pass by ref here...
     // Check if the distance estimate indicates a collision
     const de = this.DE(this.marble_pos);
     if (de >= this.marble_rad) {
@@ -310,15 +312,15 @@ export class Scene2 {
 
     // Apply the offset to the marble's position and velocity
     const dv = this.marble_vel.dot(dn);
-    delta_v = Math.max(delta_v, dv);
-    this.marble_pos = this.marble_vel.subtractMatrix(dn.multiply(this.marble_rad).subtractMatrix(d));
+    delta_v = Math.max(delta_v, dv); // todo: ref passed number is updated here in cpp
+    this.marble_pos = this.marble_pos.subtractMatrix(dn.multiply(this.marble_rad).subtractMatrix(d));
     this.marble_vel = this.marble_vel.subtractMatrix(dn.multiply(dv * marble_bounce));
     return true;
   }
 
   DE(pt: Vector3f): number {
 
-    const p: Vector4f = new Vector4f();
+    let p: Vector4f = new Vector4f();
     p.setOnes();
     p.setVector3f(pt); // p << pt, 1.0; // todo: not sure what this does
 
@@ -336,13 +338,11 @@ export class Scene2 {
       p.y = rotz_y;
 
       // mengerFold
-      // tslint:disable-next-line:no-shadowed-variable
       let a = Math.min(p.x - p.y, 0.0);
       p.x -= a;
       p.y += a;
 
       a = Math.min(p.x - p.z, 0.0);
-
       p.x -= a;
       p.z += a;
 
@@ -359,15 +359,15 @@ export class Scene2 {
       p.z = rotx_z;
 
       // scaleTrans
-      p.multiply(this.frac_scale);
+      p = p.multiply(this.frac_scale);
       // p.segment<3>(0) += this.frac_shift;
       p.setVector3f(p.getVector3f().addMatrix(this.frac_shift));
     }
 
     // const Eigen::Vector3f a = p.segment<3>(0).cwiseAbs() - Eigen::Vector3f(6.0f, 6.0f, 6.0f);
-    const a = p.getVector3f().cwiseAbs().subtractMatrix(this.frac_collision_factor);
-    //   return (std::min(std::max(std::max(a.x(), a.y()), a.z()), 0.0f) + a.cwiseMax(0.0f).norm()) / p.w();
-    return Math.min(Math.max(Math.max(a.x, a.y), a.z), 0.0) + a.max(0.0) / p.w;
+    const b = p.getVector3f().cwiseAbs().subtractMatrix(this.frac_collision_factor);
+    // return (std::min(std::max(std::max(a.x(), a.y()), a.z()), 0.0f) + a.cwiseMax(0.0f).norm()) / p.w();
+    return (Math.min(Math.max(b.x, b.y, b.z), 0.0) + b.cwiseMax(new Vector3f()).length()) / p.w;
   }
 
   NP(pt: Vector3f): Vector3f {
@@ -379,7 +379,7 @@ export class Scene2 {
     // Fold the point, keeping history
     for (let i = 0; i < fractal_iters; ++i) {
       // absFold
-      p_hist.push(p);
+      p_hist.push(p.clone());
       // p.segment<3>(0) = p.segment<3>(0).cwiseAbs();
       p.setVector3f(p.getVector3f().cwiseAbs());
       // rotZ
@@ -391,7 +391,7 @@ export class Scene2 {
       p.y = rotz_y;
 
       // mengerFold
-      p_hist.push(p);
+      p_hist.push(p.clone());
 
       let a = Math.min(p.x - p.y, 0.0);
       p.x -= a;
@@ -410,14 +410,16 @@ export class Scene2 {
       const rotx_s = Math.sin(this.frac_angle2);
       const rotx_y = rotx_c * p.y + rotx_s * p.z;
       const rotx_z = rotx_c * p.z - rotx_s * p.y;
-      p.y = rotx_y; p.z = rotx_z;
+      p.y = rotx_y;
+      p.z = rotx_z;
+
       // scaleTrans
-      p.multiply(this.frac_scale);
+      p = p.multiply(this.frac_scale);
       p.setVector3f(p.getVector3f().addMatrix(this.frac_shift));
     }
 
     // Get the nearest point
-    let n = p.getVector3f().cwiseMax(-6.0).cwiseMin(6.0);
+    let n = p.getVector3f().cwiseMax(new Vector3f(-6.0, -6.0, -6.0)).cwiseMin(new Vector3f(6.0, 6.0, 6.0));
     // Then unfold the nearest point (reverse order)
     for (let i = 0; i < fractal_iters; ++i) {
       // scaleTrans
@@ -435,24 +437,24 @@ export class Scene2 {
 
       // mengerUnfold
       p = p_hist.pop();
-      const narr = n.get();
-      let parr = p.get();
-      const mx = Math.max(parr[0], parr[1]);
+      const mx = Math.max(p.x, p.y);
 
-      if (Math.min(parr[0], parr[1]) < Math.min(mx, parr[2])) {
-        const tmp = narr[1];
-        narr[1] = narr[2];
-        narr[2] = tmp;
+      if (Math.min(p.x, p.y) < Math.min(mx, p.z)) {
+        const tmp = n.y;
+        n.y = n.z;
+        n.z = tmp;
       }
-      if (mx < parr[2]) {
-        const tmp = narr[0];
-        narr[0] = narr[2];
-        narr[2] = tmp;
+
+      if (mx < p.z) {
+        const tmp = n.x;
+        n.x = n.z;
+        n.z = tmp;
       }
-      if (parr[0] < parr[1]) {
-        const tmp = narr[0];
-        narr[0] = narr[2];
-        narr[2] = tmp;
+
+      if (p.x < p.y) {
+        const tmp = n.x;
+        n.x = n.y;
+        n.y = tmp;
       }
 
       // rotZ
@@ -465,17 +467,20 @@ export class Scene2 {
 
       // absUnfold
       p = p_hist.pop();
-      parr = p.get();
-      if (parr[0] < 0.0) {
-        narr[0] = -narr[0];
+
+      if (p.x < 0.0) {
+        n.x = -n.x;
       }
-      if (parr[1] < 0.0) {
-        narr[1] = -narr[1];
+
+      if (p.y < 0.0) {
+        n.y = -n.y;
       }
-      if (parr[2] < 0.0) {
-        narr[2] = -narr[2];
+
+      if (p.z < 0.0) {
+        n.z = -n.z;
       }
     }
+
     return n;
   }
 

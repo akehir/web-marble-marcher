@@ -84,12 +84,12 @@ export function cross(a, b, dst?: Float32Array): Float32Array {
  */
 export function normalize(v, dst?: Float32Array): Float32Array {
   dst = dst || new Float32Array(3);
-  const length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+  const l = length(v);
   // make sure we don't divide by 0.
-  if (length > 0.00001) {
-    dst[0] = v[0] / length;
-    dst[1] = v[1] / length;
-    dst[2] = v[2] / length;
+  if (l > 0.00001) {
+    dst[0] = v[0] / l;
+    dst[1] = v[1] / l;
+    dst[2] = v[2] / l;
   }
   return dst;
 }
@@ -170,4 +170,23 @@ export function identity(dst?: Float32Array): Float32Array {
  */
 export function dot(a: Float32Array, b: Float32Array): number {
   return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
+}
+
+/**
+ * Computes the length of a vector
+ * @param v vector to take length of
+ * @return length  of vector
+ */
+export function length(v: Float32Array): number {
+  return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+
+
+/**
+ * Computes the length squared of a vector
+ * @param v vector to take length of
+ * @return length squared of vector
+ */
+export function lengthSq(v: Float32Array): number {
+  return v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
 }

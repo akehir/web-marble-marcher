@@ -112,4 +112,13 @@ export class Vector4f {
   get(): Float32Array {
     return this.dst;
   }
+
+  clone(): Vector4f {
+    const clone = new Float32Array(4);
+    clone[0] = this.dst[0];
+    clone[1] = this.dst[1];
+    clone[2] = this.dst[2];
+    clone[3] = this.dst[3];
+    return new Vector4f(clone);
+  }
 }

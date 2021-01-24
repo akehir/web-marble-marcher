@@ -1,4 +1,4 @@
-import { addVectors, dot, normalize, subtractVectors } from './webgl-3d-math';
+import { addVectors, dot, lengthSq, normalize, subtractVectors, length } from './webgl-3d-math';
 
 export class Vector3f {
   private dst: Float32Array;
@@ -73,7 +73,9 @@ export class Vector3f {
   }
 
   normalized(): Vector3f {
+    // Normalizes the vector, i.e. divides it by its own norm.
     return new Vector3f(normalize(this.dst));
+    // return new Vector3f(this.divide(this.norm()));
   }
 
   //   Eigen::MatrixXf m(4,4);
@@ -92,6 +94,25 @@ export class Vector3f {
     return this;
   }
 
+  norm(): number {
+    // TODO
+    // Returns
+    //   , for vectors, the l2 norm of *this, and for matrices the Frobenius norm.
+    //   In both cases, it consists in the square root of the sum of the square of
+    //   all the matrix entries. For vectors, this is also equals to the square root
+    //   of the dot product of *this with itself.
+
+    return this.lengthSq();
+  }
+
+  length(): number {
+    return length(this.get());
+  }
+
+  lengthSq(): number {
+    return lengthSq(this.get());
+  }
+
   cwiseAbs(): Vector3f {
     return new Vector3f(
       Math.abs(this.dst[0]),
@@ -100,24 +121,25 @@ export class Vector3f {
     );
   }
 
-  cwiseMax(value: number): Vector3f {
+  cwiseMax(value: Vector3f): Vector3f {
     return new Vector3f(
-      Math.max(this.dst[0]),
-      Math.max(this.dst[1]),
-      Math.max(this.dst[2]),
+      Math.max(this.dst[0], value.dst[0]),
+      Math.max(this.dst[1], value.dst[1]),
+      Math.max(this.dst[2], value.dst[2]),
     );
   }
 
-  cwiseMin(value: number): Vector3f {
+  cwiseMin(value: Vector3f): Vector3f {
     return new Vector3f(
-      Math.min(this.dst[0]),
-      Math.min(this.dst[1]),
-      Math.min(this.dst[2]),
+      Math.min(this.dst[0], value.dst[0]),
+      Math.min(this.dst[1], value.dst[1]),
+      Math.min(this.dst[2], value.dst[2]),
     );
   }
 
   max(value: number): number {
     return Math.max(
+      value,
       this.dst[0],
       this.dst[1],
       this.dst[2],
