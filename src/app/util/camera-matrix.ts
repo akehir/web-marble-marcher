@@ -7,7 +7,7 @@ export class CameraMatrix extends Vector4f {
     super();
   }
 
-  setCameraPosition(position: Vector3f) {
+  setCameraPosition(position: Vector3f): void {
     // todo: equivalent to:
     // this.cam_mat.block<3, 1>(0, 3) = this.cam_pos_smooth;
   }

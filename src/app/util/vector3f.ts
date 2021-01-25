@@ -102,7 +102,7 @@ export class Vector3f {
     //   all the matrix entries. For vectors, this is also equals to the square root
     //   of the dot product of *this with itself.
 
-    return this.lengthSq();
+    return this.length();
   }
 
   length(): number {
