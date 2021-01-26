@@ -28,4 +28,3 @@ deploy_master:
      - rsync --delete -rlvvzhe ssh $CI_PROJECT_DIR/dist/web-marble-marcher/ akehir@192.168.7.111:/app/web/projects/web-marble-marcher/master/ # syncronize from build server to local via rsync
   only:
   - master
-
