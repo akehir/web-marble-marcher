@@ -45,18 +45,26 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
 
   resolution = {
-    factor: 0.25,
-    label: 'Very Low'
+    factor: 0.0625,
+    label: 'Super Low'
   };
 
   resolutions = [
     {
-      factor: 0.25,
+      factor: 0.0625,
+      label: 'Super Low'
+    },
+    {
+      factor: 0.125,
       label: 'Very Low'
     },
     {
-      factor: 0.5,
+      factor: 0.25,
       label: 'Low'
+    },
+    {
+      factor: 0.5,
+      label: 'Normal'
     },
     {
       factor: 1,
