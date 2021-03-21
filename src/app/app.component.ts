@@ -1,6 +1,6 @@
-import { AfterViewInit, Component, OnDestroy, ViewEncapsulation } from '@angular/core';
-import { combineLatest, Observable, ReplaySubject } from 'rxjs';
-import { delay, shareReplay, take, tap } from 'rxjs/operators';
+import { AfterViewInit, Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { BehaviorSubject, combineLatest, Observable, of, ReplaySubject, Subject } from 'rxjs';
+import { delay, shareReplay, switchMap, take, tap } from 'rxjs/operators';
 import { ShaderService } from '@triangular/shader';
 import { Program } from '@triangular/shader/lib/common';
 import { MarbleMarcherFragmentShader } from './shaders';
@@ -9,6 +9,8 @@ import { Level } from './types';
 import { identity, lookAt } from './util';
 import { all_levels, Level22 } from './levels';
 import { Scene2 } from './logic/scene2';
+import { RpgAwesomeIconsRegistry } from '@triangular/rpg-awesome-icons';
+import { rpgAwesomeIconCog } from '@triangular/rpg-awesome-icons/icons';
 
 @Component({
   selector: 'app-root',
@@ -16,7 +18,7 @@ import { Scene2 } from './logic/scene2';
   styleUrls: [],
   encapsulation: ViewEncapsulation.None,
 })
-export class AppComponent implements OnDestroy, AfterViewInit {
+export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   title = 'web-marble-marcher';
 
   start = true;
@@ -24,19 +26,62 @@ export class AppComponent implements OnDestroy, AfterViewInit {
   levels: Level[] = all_levels;
   scene: Scene2;
 
+  update$: Subject<boolean> = new BehaviorSubject(true);
+
+  mode = {
+    mode: 'wallpaper',
+    label: 'Wallpaper'
+  };
+
+  modes =  [
+    {
+      mode: 'wallpaper',
+      label: 'Wallpaper'
+    },
+    {
+      mode: 'game',
+      label: 'Game'
+    },
+  ];
+
+  resolution = {
+    factor: 0.25,
+    label: 'Very Low'
+  };
+
+  resolutions = [
+    {
+      factor: 0.25,
+      label: 'Very Low'
+    },
+    {
+      factor: 0.5,
+      label: 'Low'
+    },
+    {
+      factor: 1,
+      label: 'High'
+    },
+  ];
+
   program$: Observable<Program>;
 
   level$ = new ReplaySubject<Level>(1);
 
   private keyboardListener: (e: KeyboardEvent) => void;
 
-  constructor(private shader: ShaderService) {}
+  constructor(private shader: ShaderService, private registry: RpgAwesomeIconsRegistry) {
+    registry.registerIcons([
+      rpgAwesomeIconCog,
+    ]);
+  }
 
   ngOnDestroy(): void {
     // Clean up subscriptions
     this.level$.complete();
 
     // remove event listeners
+    this.unsetListeners();
 
     // Clean up Scene.
     if (this.scene) {
@@ -44,9 +89,23 @@ export class AppComponent implements OnDestroy, AfterViewInit {
     }
   }
 
+  toggleMenu(): void {
+    this.menu = !this.menu;
+  }
+
+  updateMode(mode: {mode: string, label: string}): void {
+    this.update$.next(true);
+    this.mode = mode;
+  }
+
+  updateResolution(resolution: { factor: number, label: string}): void {
+    // this.update$.next(true); // not required
+    this.resolution = resolution;
+    this.shader.RESOLUTION_FACTOR = resolution.factor;
+  }
+
   pauseGame(): void {}
   unPauseGame(): void {}
-
   setExposure(): void {}
 
   setListeners(): void {
@@ -96,9 +155,12 @@ export class AppComponent implements OnDestroy, AfterViewInit {
     this.level$.next(level);
   }
 
+  ngOnInit(): void {}
+
   ngAfterViewInit(): void {
     // initializing all the streams we're interested in.
     // this is where the magic happens!
+    this.shader.RESOLUTION_FACTOR = this.resolution.factor;
 
     this.program$ = this.shader.createProgram(
       'marble-marcher',
@@ -119,15 +181,27 @@ export class AppComponent implements OnDestroy, AfterViewInit {
     combineLatest([
       this.program$,
       this.level$.asObservable(),
+      this.update$.asObservable(),
     ]).pipe(
       delay(16),
-      // this.oldTap(),
-      this.newTap(),
+      switchMap(([program, level]) => {
+        if (this.mode.mode === 'game') {
+          // to play the game, we return the gamemode.
+          return of([program, level]).pipe(
+            this.gameMode(),
+          );
+        }
+
+        // default we return the wallpapermode
+        return of([program, level]).pipe(
+          this.wallpaperMode(),
+        );
+      }),
     ).subscribe();
   }
 
   // tslint:disable-next-line:typedef
-  private oldTap() {
+  private wallpaperMode() {
     return tap(([program, level]) => {
 
       this.start = false;
@@ -155,8 +229,8 @@ export class AppComponent implements OnDestroy, AfterViewInit {
       program.gl.uniform3f(iFracCol, level.color.x, level.color.y, level.color.z);
       program.gl.uniform1f(iFlagScale, level.isPlanet ? -level.marble.radius : level.marble.radius); // if planet -> Minus
       program.gl.uniform1f(iMarbleRad, level.marble.radius);
-      program.gl.uniform3f(iMarblePos, level.marble.position.x, level.marble.position.y, level.marble.position.z);
-      program.gl.uniform3f(iFlagPos, level.flag.position.x, level.flag.position.y, level.flag.position.z);
+      program.gl.uniform3f(iMarblePos, 999, 999, 999);
+      program.gl.uniform3f(iFlagPos, 999, 999, 999);
 
       //   shader.setUniform("iExposure", exposure);
       program.gl.uniform1f(iExposure, 1.0);
@@ -216,7 +290,7 @@ export class AppComponent implements OnDestroy, AfterViewInit {
   }
 
   // tslint:disable-next-line:typedef
-  private newTap<T>() {
+  private gameMode<T>() {
     return tap(([program, level]) => {
 
       this.start = false;

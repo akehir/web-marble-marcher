@@ -34,6 +34,11 @@ button {
   margin-top: 2rem;
   margin-right: 2rem;
   width: calc(77.7/3 - 6rem);
+
+  &.active {
+    background: #ccc;
+    color: #777;
+  }
 }
 
 app-root {
@@ -59,4 +64,21 @@ app-root {
   .hidden {
     display: none;
   }
+
+  nav {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+
+    rpg-awesome-icon {
+      display: block;
+      width: 64px;
+      height: 64px;
+      color: #ccc;
+    }
+  }
+}
+
+svg {
+  fill: currentColor;
 }

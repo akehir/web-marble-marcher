@@ -1,6 +1,14 @@
 <main [ngClass]="{'hidden': !menu }">
   <h1>{{ title }}</h1>
   <section>
+    <h2>Resolution</h2>
+    <button *ngFor="let r of resolutions" (click)="updateResolution(r)" [ngClass]="{'active': resolution.factor === r.factor}">{{r.label}}</button>
+  </section>
+  <section>
+    <h2>Mode</h2>
+    <button *ngFor="let m of modes" (click)="updateMode(m)" [ngClass]="{'active': mode.mode === m.mode}">{{m.label}}</button>
+  </section>
+  <section>
     <h2>Levels</h2>
     <p>Click the buttons see the levels</p>
     <button *ngFor="let level of levels" (click)="runLevel(level)">{{level.description}}</button>
@@ -16,4 +24,5 @@
     <p>This project is licensed under the GPL License</p>
   </section>
 </main>
+<nav><rpg-awesome-icon name="cog" (click)="toggleMenu()"></rpg-awesome-icon></nav>
 <webgl-shader></webgl-shader>
