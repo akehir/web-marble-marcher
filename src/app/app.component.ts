@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, NgZone, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { BehaviorSubject, combineLatest, Observable, of, ReplaySubject, Subject } from 'rxjs';
 import { delay, shareReplay, switchMap, take, tap } from 'rxjs/operators';
 import { ShaderService } from '@triangular/shader';
@@ -78,7 +78,11 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private keyboardListener: (e: KeyboardEvent) => void;
 
-  constructor(private shader: ShaderService, private registry: RpgAwesomeIconsRegistry) {
+  constructor(
+    private zone: NgZone,
+    private shader: ShaderService,
+    private registry: RpgAwesomeIconsRegistry,
+  ) {
     registry.registerIcons([
       rpgAwesomeIconCog,
     ]);
@@ -166,46 +170,48 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {}
 
   ngAfterViewInit(): void {
-    // initializing all the streams we're interested in.
-    // this is where the magic happens!
-    this.shader.RESOLUTION_FACTOR = this.resolution.factor;
+    this.zone.runOutsideAngular(() => {
+      // initializing all the streams we're interested in.
+      // this is where the magic happens!
+      this.shader.RESOLUTION_FACTOR = this.resolution.factor;
 
-    this.program$ = this.shader.createProgram(
-      'marble-marcher',
-      MarbleMarcherVertexShader,
-      MarbleMarcherFragmentShader,
-    ).pipe(
-      take(1),
-      shareReplay(1),
-    );
+      this.program$ = this.shader.createProgram(
+        'marble-marcher',
+        MarbleMarcherVertexShader,
+        MarbleMarcherFragmentShader,
+      ).pipe(
+        take(1),
+        shareReplay(1),
+      );
 
-    this.program$.subscribe(program => {
-      this.scene = new Scene2(program);
-      this.scene.AddEventListeners();
-    });
+      this.program$.subscribe(program => {
+        this.scene = new Scene2(program);
+        this.scene.AddEventListeners();
+      });
 
-    this.level$.next(Level22);
+      this.level$.next(Level22);
 
-    combineLatest([
-      this.program$,
-      this.level$.asObservable(),
-      this.update$.asObservable(),
-    ]).pipe(
-      delay(16),
-      switchMap(([program, level]) => {
-        if (this.mode.mode === 'game') {
-          // to play the game, we return the gamemode.
+      combineLatest([
+        this.program$,
+        this.level$.asObservable(),
+        this.update$.asObservable(),
+      ]).pipe(
+        delay(16),
+        switchMap(([program, level]) => {
+          if (this.mode.mode === 'game') {
+            // to play the game, we return the gamemode.
+            return of([program, level]).pipe(
+              this.gameMode(),
+            );
+          }
+
+          // default we return the wallpapermode
           return of([program, level]).pipe(
-            this.gameMode(),
+            this.wallpaperMode(),
           );
-        }
-
-        // default we return the wallpapermode
-        return of([program, level]).pipe(
-          this.wallpaperMode(),
-        );
-      }),
-    ).subscribe();
+        }),
+      ).subscribe();
+    });
   }
 
   // tslint:disable-next-line:typedef
