@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, NgZone, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { BehaviorSubject, combineLatest, Observable, of, ReplaySubject, Subject } from 'rxjs';
 import { delay, shareReplay, switchMap, take, tap } from 'rxjs/operators';
 import { ShaderService } from '@triangular/shader';
@@ -7,7 +7,7 @@ import { MarbleMarcherFragmentShader } from './shaders';
 import { MarbleMarcherVertexShader } from './shaders';
 import { Level } from './types';
 import { identity, lookAt } from './util';
-import { all_levels, Level22 } from './levels';
+import { all_levels, Level1, Level22 } from './levels';
 import { Scene2 } from './logic/scene2';
 import { RpgAwesomeIconsRegistry } from '@triangular/rpg-awesome-icons';
 import { rpgAwesomeIconCog } from '@triangular/rpg-awesome-icons/icons';
@@ -22,15 +22,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   title = 'web-marble-marcher';
 
   start = true;
-  menu = true;
+  menu = false;
   levels: Level[] = all_levels;
   scene: Scene2;
 
   update$: Subject<boolean> = new BehaviorSubject(true);
 
   mode = {
-    mode: 'wallpaper',
-    label: 'Wallpaper'
+    mode: 'game',
+    label: 'Game'
   };
 
   modes =  [
@@ -45,8 +45,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
 
   resolution = {
-    factor: 0.0625,
-    label: 'Super Low'
+    factor: 1,
+    label: 'High'
   };
 
   resolutions = [
@@ -80,6 +80,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(
     private zone: NgZone,
+    private change: ChangeDetectorRef,
     private shader: ShaderService,
     private registry: RpgAwesomeIconsRegistry,
   ) {
@@ -189,7 +190,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         this.scene.AddEventListeners();
       });
 
-      this.level$.next(Level22);
+      // this.level$.next(Level22);
+      this.level$.next(Level1);
 
       combineLatest([
         this.program$,
@@ -296,6 +298,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       this.keyboardListener = (e: KeyboardEvent) => {
         if (e.code === 'Escape') {
           this.menu = !this.menu;
+          this.change.detectChanges();
         }
       };
 
@@ -323,6 +326,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       this.keyboardListener = (e: KeyboardEvent) => {
         if (e.code === 'Escape') {
           this.menu = !this.menu;
+          this.change.detectChanges();
         }
       };
 

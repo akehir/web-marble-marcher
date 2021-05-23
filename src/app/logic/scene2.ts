@@ -1,4 +1,14 @@
-import { CameraMatrix, identity, lookAt, Vector3f, Vector4f } from '../util';
+import {
+  CameraMatrix,
+  identity,
+  inverse,
+  lookAt,
+  ModPi, multiply4,
+  rotation3,
+  Vector3f,
+  Vector4f,
+  xRotate4, xRotation4, yRotate4, yRotation4, zRotation4,
+} from '../util';
 import {
   air_force,
   air_friction,
@@ -8,17 +18,18 @@ import {
   gravity,
   ground_force,
   ground_friction,
-  ground_ratio,
-  marble_bounce,
+  ground_ratio, look_smooth, look_smooth_free_camera,
+  marble_bounce, max_zoom, min_zoom,
   mouse_sensitivity,
-  num_phys_steps,
+  num_phys_steps, pi,
   screen_center,
-  wheel_sensitivity
+  wheel_sensitivity, zoom_smooth,
 } from '../constants';
 import { CamMode, Level } from '../types';
 import { sf, } from '../mock';
 import { Program } from '@triangular/shader/lib/common';
 import { levelToFracParams } from '../util/level-to-frac-params';
+import { Vector2f } from '../util/vector2f';
 
 export class Scene2 {
   private readonly program: Program;
@@ -26,7 +37,9 @@ export class Scene2 {
   private play_single = false;
   private is_fullrun = false;
   private exposure = 1.0;
-  private cam_mat: CameraMatrix = new CameraMatrix();
+  // private cam_mat: CameraMatrix = new CameraMatrix();
+  private cam_mat: Float32Array = new Float32Array(4);
+  // private cam_mat = new Vector4f();
   private cam_look_x = 0.0;
   private cam_look_x_smooth = 0.0;
   private cam_look_y = 0.0;
@@ -57,11 +70,17 @@ export class Scene2 {
   private frac_color = new Vector3f();
   private frac_collision_factor = new Vector3f(6.0, 6.0, 6.0);
   private u_viewInverse = identity();
-  private u_viewUp = [0, 1, 0];
+  private u_viewUp = new Float32Array([0, 1, 0]);
 
   private final_time: number;
 
   private level_copy: Level;
+
+  private mouse = new Vector2f();
+  private mouseLastFrame = new Vector2f();
+  private mouse_clicked = false;
+  private wheelDelta = new Vector3f();
+  private wheelDeltaTotal = new Vector3f();
 
   constructor(
     program: Program,
@@ -79,6 +98,22 @@ export class Scene2 {
   }
 
   private mouseMove: (e: MouseEvent) => void = (event) => {
+    this.mouse.x = event.clientX || 0;
+    this.mouse.y = event.clientY || 0;
+  }
+
+  private wheelMove: (e: WheelEvent) => void = (event) => {
+    this.wheelDelta.x = event.deltaX || 0;
+    this.wheelDelta.y = event.deltaY || 0;
+    this.wheelDelta.z = event.deltaZ || 0;
+  }
+
+  private mouseDown: (e: MouseEvent) => void = (event) => {
+    this.mouse_clicked = true;
+  }
+
+  private mouseUp: (e: MouseEvent) => void = (event) => {
+    this.mouse_clicked = false;
   }
 
   SnapCamera(): void {
@@ -98,12 +133,18 @@ export class Scene2 {
     window.addEventListener('keydown', this.keyDownListener);
     window.addEventListener('keyup', this.keyUpListener);
     window.addEventListener('mousemove', this.mouseMove);
+    window.addEventListener('mousedown', this.mouseDown);
+    window.addEventListener('mouseup', this.mouseUp);
+    window.addEventListener('wheel', this.wheelMove);
   }
 
   RemoveEventListeners(): void {
     window.removeEventListener('keyup', this.keyUpListener);
     window.removeEventListener('keyup', this.keyUpListener);
     window.removeEventListener('mousemove', this.mouseMove);
+    window.removeEventListener('mousedown', this.mouseDown);
+    window.removeEventListener('mouseup', this.mouseUp);
+    window.removeEventListener('wheel', this.wheelMove);
   }
 
   Step(dt: number): void {
@@ -118,16 +159,19 @@ export class Scene2 {
       (this.all_keys[sf.Keyboard.Up] || this.all_keys[sf.Keyboard.W] ? 1.0 : 0.0);
 
     // Collect mouse input
-    // const mouse_delta = {x: mouse_pos.x - screen_center.x, y: mouse_pos.y - screen_center.y};
-    // sf.Mouse.setPosition(screen_center);
+    const mouse_delta = {x: this.mouse.x - this.mouseLastFrame.x, y: this.mouse.y - this.mouseLastFrame.y };
+    this.mouseLastFrame.x = this.mouse.x;
+    this.mouseLastFrame.y = this.mouse.y;
+    // this.wheelDeltaTotal.y += this.wheelDelta.y * wheel_sensitivity ;
 
-    // const cam_lr = -mouse_delta.x * mouse_sensitivity;
-    // const cam_ud = -mouse_delta.y * mouse_sensitivity;
-    // const cam_z = mouse_wheel * wheel_sensitivity;
+    const cam_lr = -mouse_delta.x * mouse_sensitivity;
+    const cam_ud = -mouse_delta.y * mouse_sensitivity;
+    const cam_z = this.wheelDelta.y * wheel_sensitivity * - 1;
+    this.wheelDelta.y = 0;
 
     // Apply forces to marble and camera
     this.UpdateMarble(force_lr, force_ud);
-    // this.UpdateCamera(cam_lr, cam_ud, cam_z, mouse_clicked);
+    this.UpdateCameraOnly(cam_lr, cam_ud, cam_z);
 
     // Update the shader values
     this.Write();
@@ -175,6 +219,11 @@ export class Scene2 {
     this.cam_dist_smooth = this.cam_dist;
     this.cam_look_y = -0.3;
     this.cam_look_y_smooth = this.cam_look_y;
+
+    const tmp = this.marble_pos.subtract(.5);
+    tmp.y  += .5;
+    tmp.z  += .25;
+    this.cam_mat = lookAt(tmp.get(), this.marble_pos.get(), this.u_viewUp);
 
     this.frac_scale = this.frac_params_smooth[0];
     this.frac_angle1 = this.frac_params_smooth[1];
@@ -245,6 +294,90 @@ export class Scene2 {
     }
   }
 
+
+  UpdateCameraOnly(dx: number, dy: number, dz: number): void {
+    // Update camera zoom
+    this.cam_dist *= Math.pow(2.0, -dz);
+    this.cam_dist = Math.min(Math.max(this.cam_dist, min_zoom), max_zoom);
+    this.cam_dist_smooth = this.cam_dist_smooth * zoom_smooth + this.cam_dist * (1 - zoom_smooth);
+
+    // Update look direction
+    this.cam_look_x += dx;
+    this.cam_look_y += dy;
+    // this.cam_look_y = Math.min(Math.max(this.cam_look_y, -pi / 2), pi / 2);
+    // this.cam_look_x = Math.min(Math.max(this.cam_look_x, -pi / 2), pi / 2);
+    this.cam_look_y = Math.min(Math.max(this.cam_look_y, -pi / 2), pi / 2);
+    this.cam_look_x = Math.min(Math.max(this.cam_look_x, -pi / 2), pi / 2);
+    // while (this.cam_look_x > pi) { this.cam_look_x -= 2 * pi; }
+    // while (this.cam_look_x < -pi) { this.cam_look_x += 2 * pi; }
+
+    // Update look smoothing
+    const a = (this.free_camera ? look_smooth_free_camera : look_smooth);
+    // this.cam_look_x_smooth = ModPi(this.cam_look_x_smooth, this.cam_look_x);
+    this.cam_look_x_smooth = this.cam_look_x_smooth * a + this.cam_look_x * (1 - a);
+    this.cam_look_y_smooth = this.cam_look_y_smooth * a + this.cam_look_y * (1 - a);
+
+    // Setup rotation matrix for planets
+    // if (this.level_copy.isPlanet) {
+    //   this.marble_mat.col(1) = this.marble_pos.normalized();
+    //   this.marble_mat.col(2) = -this.marble_mat.col(1).cross(this.marble_mat.col(0)).normalized();
+    //   this.marble_mat.col(0) = -this.marble_mat.col(2).cross(this.marble_mat.col(1)).normalized();
+    // } else {
+    //   this.marble_mat.setIdentity();
+    // }
+
+    // Update the camera matrix
+
+    // this.cam_mat.setIdentity();
+    // const Eigen::AngleAxisf aa_x_smooth(this.cam_look_x_smooth, Eigen::Vector3f::UnitY());
+    // const Eigen::AngleAxisf aa_y_smooth(this.cam_look_y_smooth, Eigen::Vector3f::UnitX());
+    // this.cam_mat.block<3, 3>(0, 0) = marble_mat * (aa_x_smooth * aa_y_smooth).toRotationMatrix();
+
+    // const aa_x_smooth = new Vector3f(rotation3(this.cam_look_x_smooth));
+    const aa_x_smooth = yRotation4(this.cam_look_x_smooth);
+    // const aa_y_smooth = new Vector3f(rotation3(this.cam_look_y_smooth));
+    const aa_y_smooth = xRotation4(this.cam_look_y_smooth);
+    // const aa_y_smooth = new Vector3f(rotation3(this.cam_look_y));
+    // const camPos = this.marble_pos.subtract(this.cam_dist_smooth).crossMatrix(aa_x_smooth).crossMatrix(aa_y_smooth).get();
+    const cam = this.marble_pos.subtract(this.cam_dist_smooth);
+    cam.y += this.cam_dist_smooth + .3;
+    cam.z += this.cam_dist_smooth / 2 - .05;
+    // cam.y -= this.cam_dist_smooth;
+    // cam.z = 0;
+
+    const look = lookAt(
+      cam.get(),
+      this.marble_pos.get(),
+      this.u_viewUp
+    );
+
+    // const camPos = multiply4(look, aa_y_smooth);
+    // const camPos = multiply4(look, aa_x_smooth);
+
+    const camPos = multiply4(
+      multiply4(
+        look,
+        aa_x_smooth
+      ),
+      aa_y_smooth
+    );
+
+    // const camPos = this.marble_pos.subtract(.5).get();
+    // camPos[2] = camPos[2];
+    // camPos[1] = camPos[1];
+    // camPos[0] = camPos[0];
+
+    // this.cam_pos = this.marble_pos + this.cam_mat.block<3, 3>(0, 0) * Vector3f(0.0, 0.0, this.marble_rad * this.cam_dist_smooth);
+    // this.cam_pos += this.marble_mat.col(1) * (this.marble_rad * this.cam_dist_smooth * 0.1);
+    //
+    // const camPos = this.marble_pos.add(.5)
+    //   .subtractMatrix(new Vector3f(dx, this.cam_dist_smooth, dy))
+    //   .get();
+
+    this.cam_mat = camPos;
+    // this.cam_mat = lookAt(cam.get(), this.marble_pos.get(), this.u_viewUp);
+  }
+
   Write(program: Program = this.program): void {
     const iMat = program.gl.getUniformLocation(program.program, 'iMat');
 
@@ -261,13 +394,8 @@ export class Scene2 {
 
     // before setting any uniforms, we need to bind the program.
     program.bind();
-    const camPos = this.marble_pos.subtract(.5).get();
-    camPos[1] = camPos[1] + .5;
-    camPos[2] = camPos[2] + .25;
 
-    const cameraMatrix = lookAt(camPos, this.marble_pos.get(), this.u_viewUp, this.u_viewInverse);
-
-    program.gl.uniformMatrix4fv(iMat, false, cameraMatrix);
+    program.gl.uniformMatrix4fv(iMat, false, this.cam_mat);
 
     // if (this.free_camera) {
     //   program.gl.uniform3f(iMarblePos, 999.0, 999.0, 999.0);

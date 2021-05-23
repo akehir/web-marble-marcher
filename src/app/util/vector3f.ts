@@ -1,9 +1,11 @@
-import { addVectors, dot, lengthSq, normalize, subtractVectors, length } from './webgl-3d-math';
+import { addVectors, dot, lengthSq, normalize, subtractVectors, length, cross } from './webgl-3d-math';
+import { Vector } from './vector';
 
-export class Vector3f {
-  private dst: Float32Array;
+export class Vector3f extends Vector {
 
   constructor(x?: number | { x: number, y: number, z: number } | number[] | Float32Array, y?: number, z?: number) {
+    super();
+
     if (x instanceof Float32Array) {
       this.dst = x;
     } else if (Array.isArray(x)) {
@@ -20,7 +22,6 @@ export class Vector3f {
       this.dst[2] = z;
     } else {
       this.dst = new Float32Array(3);
-      // todo: I think new Float32Array is initalized with all values at 0.
       this.dst[0] = 0;
       this.dst[1] = 0;
       this.dst[2] = 0;
@@ -59,7 +60,7 @@ export class Vector3f {
     return this;
   }
 
-  setZero(): Vector3f{
+  setZero(): Vector3f {
     this.setZeros();
     return this;
   }
@@ -150,6 +151,10 @@ export class Vector3f {
     return 0;
   }
 
+  crossMatrix(value: Vector3f): Vector3f {
+    return new Vector3f(cross(value.get(), this.get()));
+  }
+
   multiplyMatrix(value: Vector3f): Vector3f {
     const a = this.dst;
     const b = value.get();
@@ -210,21 +215,14 @@ export class Vector3f {
     return new Vector3f(dst);
   }
 
-  get(): Float32Array {
-    return this.dst;
-  }
-
-  setOnes(): void {
-    this.setAllValuesTo(1);
-  }
-
-  setZeros(): void {
-    this.setAllValuesTo(0);
-  }
-
-  setAllValuesTo(a: number): void {
-    for (let i = 0; i < this.dst.length; i++) {
-      this.dst[i] = a;
+  subtractDistance(value: number): Vector3f {
+    const dst = new Float32Array(3);
+    for (let i = 1; i < dst.length; i++) {
+      dst[i] = this.dst[i] - value;
     }
+
+    return new Vector3f(dst);
   }
+
+
 }

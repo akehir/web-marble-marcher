@@ -565,18 +565,18 @@ class Scene {
     }
     this.cam_dist_smooth = this.cam_dist_smooth*zoom_smooth + this.cam_dist*(1 - zoom_smooth);
 
-    //Update look direction
+    // Update look direction
     this.cam_look_x += dx;
     this.cam_look_y += dy;
     this.cam_look_y = Math.min(Math.max(this.cam_look_y, -pi / 2), pi / 2);
     while (this.cam_look_x > pi) { this.cam_look_x -= 2 * pi; }
     while (this.cam_look_x < -pi) { this.cam_look_x += 2 * pi; }
 
-    //Update look smoothing
+    // Update look smoothing
     const a = (this.free_camera ? look_smooth_free_camera : look_smooth);
     this.cam_look_x_smooth = ModPi(this.cam_look_x_smooth, this.cam_look_x);
-    this.cam_look_x_smooth = this.cam_look_x_smooth*a + this.cam_look_x*(1 - a);
-    this.cam_look_y_smooth = this.cam_look_y_smooth*a + this.cam_look_y*(1 - a);
+    this.cam_look_x_smooth = this.cam_look_x_smooth * a + this.cam_look_x * (1 - a);
+    this.cam_look_y_smooth = this.cam_look_y_smooth * a + this.cam_look_y * (1 - a);
 
     //Setup rotation matrix for planets
     if (this.level_copy.isPlanet) {
