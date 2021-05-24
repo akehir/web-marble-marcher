@@ -17,7 +17,7 @@ export const frame_transition = 400;
 export const frame_orbit = 600;
 export const frame_deorbit = 800;
 export const frame_countdown = frame_deorbit + 3 * 60;
-export const default_zoom = 0.5;
+export const default_zoom = 1;
 export const max_zoom = 7.0;
 export const min_zoom = 0.05;
 export const fractal_iters = 16;
@@ -26,7 +26,7 @@ export const ground_ratio = 1.15;
 export const num_levels_midpoint = 15;
 
 // Constants
-export const mouse_sensitivity = 0.001;
+export const mouse_sensitivity = 0.007;
 // export const wheel_sensitivity = 0.2;
 export const wheel_sensitivity = 0.005;
 export const music_vol = 75.0;

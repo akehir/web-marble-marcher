@@ -170,7 +170,7 @@ export class Scene2 {
     this.wheelDelta.y = 0;
 
     // Apply forces to marble and camera
-    this.UpdateMarble(force_lr, force_ud);
+    this.UpdateMarble(-1 * force_lr, -1 * force_ud);
     this.UpdateCameraOnly(cam_lr, cam_ud, cam_z);
 
     // Update the shader values
@@ -340,10 +340,11 @@ export class Scene2 {
     // const aa_y_smooth = new Vector3f(rotation3(this.cam_look_y));
     // const camPos = this.marble_pos.subtract(this.cam_dist_smooth).crossMatrix(aa_x_smooth).crossMatrix(aa_y_smooth).get();
     const cam = this.marble_pos.subtract(this.cam_dist_smooth);
-    cam.y += this.cam_dist_smooth + .3;
-    cam.z += this.cam_dist_smooth / 2 - .05;
+    // cam.x += this.cur_level.marble.direction;
+    cam.y += this.cam_dist_smooth + .5;
+    // cam.z += this.cam_dist_smooth / 2 + .5;
     // cam.y -= this.cam_dist_smooth;
-    // cam.z = 0;
+    // cam.z += .25;
 
     const look = lookAt(
       cam.get(),

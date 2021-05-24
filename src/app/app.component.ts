@@ -29,8 +29,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   update$: Subject<boolean> = new BehaviorSubject(true);
 
   mode = {
-    mode: 'game',
-    label: 'Game'
+    mode: 'wallpaper',
+    label: 'Wallpaper'
   };
 
   modes =  [
@@ -45,8 +45,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
 
   resolution = {
-    factor: 1,
-    label: 'High'
+    factor: 0.0625,
+    label: 'Super Low'
   };
 
   resolutions = [
