@@ -91,30 +91,30 @@ export class Scene2 {
 
   private keyUpListener: (e: KeyboardEvent) => void = (event) => {
     this.all_keys[event.code] = false;
-  }
+  };
 
   private keyDownListener: (e: KeyboardEvent) => void = (event) => {
     this.all_keys[event.code] = true;
-  }
+  };
 
   private mouseMove: (e: MouseEvent) => void = (event) => {
     this.mouse.x = event.clientX || 0;
     this.mouse.y = event.clientY || 0;
-  }
+  };
 
   private wheelMove: (e: WheelEvent) => void = (event) => {
     this.wheelDelta.x = event.deltaX || 0;
     this.wheelDelta.y = event.deltaY || 0;
     this.wheelDelta.z = event.deltaZ || 0;
-  }
+  };
 
   private mouseDown: (e: MouseEvent) => void = (event) => {
     this.mouse_clicked = true;
-  }
+  };
 
   private mouseUp: (e: MouseEvent) => void = (event) => {
     this.mouse_clicked = false;
-  }
+  };
 
   SnapCamera(): void {
     this.cam_look_x_smooth = this.cam_look_x;

@@ -3,7 +3,7 @@ import { Vector } from './vector';
 
 export class Vector3f extends Vector {
 
-  constructor(x?: number | { x: number, y: number, z: number } | number[] | Float32Array, y?: number, z?: number) {
+  constructor(x?: number | { x: number; y: number; z: number } | number[] | Float32Array, y?: number, z?: number) {
     super();
 
     if (x instanceof Float32Array) {

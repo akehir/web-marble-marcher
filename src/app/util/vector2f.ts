@@ -2,7 +2,7 @@ import { Vector } from './vector';
 
 export class Vector2f extends Vector {
 
-  constructor(x?: number | { x: number, y: number} | number[] | Float32Array, y?: number) {
+  constructor(x?: number | { x: number; y: number} | number[] | Float32Array, y?: number) {
     super();
 
     if (x instanceof Float32Array) {

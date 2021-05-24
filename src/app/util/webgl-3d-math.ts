@@ -33,6 +33,7 @@
 
 /**
  * subtracts 2 vectors3s
+ *
  * @param a a
  * @param b b
  * @param dst optional vector3 to store result
@@ -48,6 +49,7 @@ export function subtractVectors(a, b, dst?: Float32Array): Float32Array {
 
 /**
  * adds 2 vectors3s
+ *
  * @param a a
  * @param b b
  * @param dst optional vector3 to store result
@@ -63,6 +65,7 @@ export function addVectors(a, b,  dst?: Float32Array): Float32Array {
 
 /**
  * Computes the cross product of 2 vectors3s
+ *
  * @param a a
  * @param b b
  * @param dst optional vector3 to store result
@@ -78,6 +81,7 @@ export function cross(a, b, dst?: Float32Array): Float32Array {
 
 /**
  * normalizes a vector.
+ *
  * @param v vector to normalize
  * @param dst optional vector3 to store result
  * @return dst or new Vector3 if not provided
@@ -99,6 +103,7 @@ export function normalize(v, dst?: Float32Array): Float32Array {
  * This is a world matrix for a camera. In other words it will transform
  * from the origin to a place and orientation in the world. For a view
  * matrix take the inverse of this.
+ *
  * @param cameraPosition position of the camera
  * @param target position of the target
  * @param up direction
@@ -139,6 +144,7 @@ export function lookAt(
 
 /**
  * Computes the inverse of a matrix.
+ *
  * @param m matrix to compute inverse of
  * @param [dst] optional matrix to store result
  * @return dst or a new matrix if none provided
@@ -231,6 +237,7 @@ export function inverse(m: Float32Array, dst?: Float32Array): Float32Array {
 
 /**
  * Makes an identity matrix.
+ *
  * @param [dst] optional matrix to store result
  * @return dst or a new matrix if none provided
  */
@@ -261,6 +268,7 @@ export function identity(dst?: Float32Array): Float32Array {
 /**
  * Computes the dot product of two vectors; assumes both vectors have
  * three entries.
+ *
  * @param a Operand vector.
  * @param b Operand vector.
  * @return dot product
@@ -271,6 +279,7 @@ export function dot(a: Float32Array, b: Float32Array): number {
 
 /**
  * Computes the length of a vector
+ *
  * @param v vector to take length of
  * @return length  of vector
  */
@@ -281,6 +290,7 @@ export function length(v: Float32Array): number {
 
 /**
  * Computes the length squared of a vector
+ *
  * @param v vector to take length of
  * @return length squared of vector
  */
@@ -290,6 +300,7 @@ export function lengthSq(v: Float32Array): number {
 
 /**
  * Makes an x rotation matrix
+ *
  * @param angleInRadians amount to rotate
  * @param [dst] optional matrix to store result
  * @return dst or a new matrix if none provided
@@ -321,6 +332,7 @@ export function xRotation4(angleInRadians: number, dst?: Float32Array): Float32A
 
 /**
  * Multiply by an x rotation matrix
+ *
  * @param m matrix to multiply
  * @param angleInRadians amount to rotate
  * @param [dst] optional matrix to store result
@@ -366,6 +378,7 @@ export function xRotate4(m: Float32Array, angleInRadians: number, dst?: Float32A
 
 /**
  * Makes an y rotation matrix
+ *
  * @param angleInRadians amount to rotate
  * @param [dst] optional matrix to store result
  * @return dst or a new matrix if none provided
@@ -397,6 +410,7 @@ export function yRotation4(angleInRadians: number, dst?: Float32Array): Float32A
 
 /**
  * Multiply by an y rotation matrix
+ *
  * @param m matrix to multiply
  * @param angleInRadians amount to rotate
  * @param [dst] optional matrix to store result
@@ -442,6 +456,7 @@ export function yRotate4(m: Float32Array, angleInRadians: number, dst?: Float32A
 
 /**
  * Makes an z rotation matrix
+ *
  * @param angleInRadians amount to rotate
  * @param [dst] optional matrix to store result
  */
@@ -472,6 +487,7 @@ export function zRotation4(angleInRadians: number, dst?: Float32Array): Float32A
 
 /**
  * Multiply by an z rotation matrix
+ *
  * @param m matrix to multiply
  * @param angleInRadians amount to rotate
  * @param [dst] optional matrix to store result
@@ -517,6 +533,7 @@ export function zRotate4(m: Float32Array, angleInRadians: number, dst?: Float32A
 
 /**
  * Makes an rotation matrix around an arbitrary axis
+ *
  * @param axis axis to rotate around
  * @param angleInRadians amount to rotate
  * @param [dst] optional matrix to store result
@@ -561,6 +578,7 @@ export function axisRotation4(axis: Float32Array, angleInRadians: number, dst?: 
 
 /**
  * Multiply by an axis rotation matrix
+ *
  * @param m matrix to multiply
  * @param axis axis to rotate around
  * @param angleInRadians amount to rotate
@@ -637,6 +655,7 @@ export function axisRotate4(m: Float32Array, axis: Float32Array, angleInRadians:
  * transform by b first and then a.  Note this is subtly different from just
  * multiplying the matrices together.  For given a and b, this function returns
  * the same object in both row-major and column-major mode.
+ *
  * @param a A matrix.
  * @param b A matrix.
  * @param [dst] optional matrix to store result
@@ -697,6 +716,7 @@ export function multiply4(a: Float32Array, b: Float32Array, dst?: Float32Array):
 /**
  * Takes two Matrix3s, a and b, and computes the product in the order
  * that pre-composes b with a.  In other words, the matrix returned will
+ *
  * @param a A matrix.
  * @param b A matrix.
  * @return the result.
@@ -736,6 +756,7 @@ export function multiply3(a: Float32Array, b: Float32Array): number[] {
 
 /**
  * Creates a 2D rotation matrix
+ *
  * @param angleInRadians amount to rotate in radians
  * @return a rotation matrix that rotates by angleInRadians
  */

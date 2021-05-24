@@ -106,12 +106,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.menu = !this.menu;
   }
 
-  updateMode(mode: {mode: string, label: string}): void {
+  updateMode(mode: {mode: string; label: string}): void {
     this.update$.next(true);
     this.mode = mode;
   }
 
-  updateResolution(resolution: { factor: number, label: string}): void {
+  updateResolution(resolution: { factor: number; label: string}): void {
     // this.update$.next(true); // not required
     this.resolution = resolution;
     this.shader.RESOLUTION_FACTOR = resolution.factor;
@@ -216,7 +216,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  // tslint:disable-next-line:typedef
+  // eslint-disable-next-line
   private wallpaperMode() {
     return tap(([program, level]) => {
 
@@ -306,7 +306,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  // tslint:disable-next-line:typedef
+  // eslint-disable-next-line
   private gameMode<T>() {
     return tap(([program, level]) => {
 
