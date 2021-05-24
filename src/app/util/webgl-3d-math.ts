@@ -105,7 +105,11 @@ export function normalize(v, dst?: Float32Array): Float32Array {
  * @param [dst] optional matrix to store result
  * @return dst or a new matrix if none provided
  */
-export function lookAt(cameraPosition: Float32Array | number[], target: Float32Array | number[], up: Float32Array | number[], dst?: Float32Array): Float32Array {
+export function lookAt(
+  cameraPosition: Float32Array,
+  target: Float32Array,
+  up: Float32Array,
+  dst?: Float32Array): Float32Array {
   dst = dst || new Float32Array(16);
   const zAxis = normalize(
     subtractVectors(cameraPosition, target));

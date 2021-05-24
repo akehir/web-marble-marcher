@@ -265,9 +265,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         u_lightColor:            [1, 1, 1, 1],
       };
 
-      let cameraPosition = [13.37, 13.37, 13.37];
-      const target = [0, 0, 0];
-      const up = [0, 1, 0];
+      let cameraPosition = new Float32Array([13.37, 13.37, 13.37]);
+      const target =  new Float32Array([0, 0, 0]);
+      const up =  new Float32Array([0, 1, 0]);
       let cameraMatrix = lookAt(cameraPosition, target, up, uniformsThatAreTheSameForAllObjects.u_viewInverse);
 
       program.gl.uniformMatrix4fv(iMat, false, cameraMatrix);
@@ -279,7 +279,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         // update camera
         eclipsed += dt;
         cos = Math.cos(eclipsed);
-        cameraPosition = [cameraPosition[0], 13.3 * cos, 13.37 * cos];
+        cameraPosition =  new Float32Array([cameraPosition[0], 13.3 * cos, 13.37 * cos]);
         cameraMatrix = lookAt(cameraPosition, target, up, uniformsThatAreTheSameForAllObjects.u_viewInverse);
         program.gl.uniformMatrix4fv(iMat, false, cameraMatrix);
 
