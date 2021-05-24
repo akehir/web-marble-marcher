@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 // Game modes
 export enum CamMode {
   INTRO,

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, NgZone, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { BehaviorSubject, combineLatest, Observable, of, ReplaySubject, Subject } from 'rxjs';
 import { delay, shareReplay, switchMap, take, tap } from 'rxjs/operators';
 import { ShaderService } from '@triangular/shader';
@@ -7,7 +7,7 @@ import { MarbleMarcherFragmentShader } from './shaders';
 import { MarbleMarcherVertexShader } from './shaders';
 import { Level } from './types';
 import { identity, lookAt } from './util';
-import { all_levels, Level22 } from './levels';
+import { all_levels, Level1, Level22 } from './levels';
 import { Scene2 } from './logic/scene2';
 import { RpgAwesomeIconsRegistry } from '@triangular/rpg-awesome-icons';
 import { rpgAwesomeIconCog } from '@triangular/rpg-awesome-icons/icons';
@@ -22,7 +22,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   title = 'web-marble-marcher';
 
   start = true;
-  menu = true;
+  menu = false;
   levels: Level[] = all_levels;
   scene: Scene2;
 
@@ -80,6 +80,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(
     private zone: NgZone,
+    private change: ChangeDetectorRef,
     private shader: ShaderService,
     private registry: RpgAwesomeIconsRegistry,
   ) {
@@ -105,12 +106,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.menu = !this.menu;
   }
 
-  updateMode(mode: {mode: string, label: string}): void {
+  updateMode(mode: {mode: string; label: string}): void {
     this.update$.next(true);
     this.mode = mode;
   }
 
-  updateResolution(resolution: { factor: number, label: string}): void {
+  updateResolution(resolution: { factor: number; label: string}): void {
     // this.update$.next(true); // not required
     this.resolution = resolution;
     this.shader.RESOLUTION_FACTOR = resolution.factor;
@@ -189,7 +190,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         this.scene.AddEventListeners();
       });
 
-      this.level$.next(Level22);
+      // this.level$.next(Level22);
+      this.level$.next(Level1);
 
       combineLatest([
         this.program$,
@@ -214,7 +216,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  // tslint:disable-next-line:typedef
+  // eslint-disable-next-line
   private wallpaperMode() {
     return tap(([program, level]) => {
 
@@ -263,9 +265,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         u_lightColor:            [1, 1, 1, 1],
       };
 
-      let cameraPosition = [13.37, 13.37, 13.37];
-      const target = [0, 0, 0];
-      const up = [0, 1, 0];
+      let cameraPosition = new Float32Array([13.37, 13.37, 13.37]);
+      const target =  new Float32Array([0, 0, 0]);
+      const up =  new Float32Array([0, 1, 0]);
       let cameraMatrix = lookAt(cameraPosition, target, up, uniformsThatAreTheSameForAllObjects.u_viewInverse);
 
       program.gl.uniformMatrix4fv(iMat, false, cameraMatrix);
@@ -277,7 +279,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         // update camera
         eclipsed += dt;
         cos = Math.cos(eclipsed);
-        cameraPosition = [cameraPosition[0], 13.3 * cos, 13.37 * cos];
+        cameraPosition =  new Float32Array([cameraPosition[0], 13.3 * cos, 13.37 * cos]);
         cameraMatrix = lookAt(cameraPosition, target, up, uniformsThatAreTheSameForAllObjects.u_viewInverse);
         program.gl.uniformMatrix4fv(iMat, false, cameraMatrix);
 
@@ -296,6 +298,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       this.keyboardListener = (e: KeyboardEvent) => {
         if (e.code === 'Escape') {
           this.menu = !this.menu;
+          this.change.detectChanges();
         }
       };
 
@@ -303,7 +306,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  // tslint:disable-next-line:typedef
+  // eslint-disable-next-line
   private gameMode<T>() {
     return tap(([program, level]) => {
 
@@ -323,6 +326,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       this.keyboardListener = (e: KeyboardEvent) => {
         if (e.code === 'Escape') {
           this.menu = !this.menu;
+          this.change.detectChanges();
         }
       };
 

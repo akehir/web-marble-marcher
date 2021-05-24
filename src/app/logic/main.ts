@@ -1,4 +1,4 @@
-// tslint:disable
+/* eslint-disable */
 // c++ code copied -> no linting
 
 // Mocks
@@ -117,7 +117,7 @@ function UnlockMouse(window): void  {
   window.setMouseCursorVisible(true);
 }
 
-// tslint:disable-next-line:variable-name
+// eslint-disable-next-line @typescript-eslint/naming-convention, no-underscore-dangle, id-blacklist, id-match
 function PauseGame(window, _scene): void  {
   game_mode = GameMode.PAUSED;
   _scene.GetCurMusic().setVolume(GetVol());

@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 export interface Music {
   setVolume: (volume: number) => {};
   stop: () => {};

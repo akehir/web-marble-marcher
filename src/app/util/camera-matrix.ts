@@ -27,4 +27,8 @@ export class CameraMatrix extends Vector4f {
   setCameraX(): void {
     // todo
   }
+
+  setIdentity(): void {
+
+  }
 }

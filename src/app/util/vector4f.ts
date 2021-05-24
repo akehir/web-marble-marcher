@@ -1,9 +1,11 @@
 import { Vector3f } from './vector3f';
+import { Vector } from './vector';
 
-export class Vector4f {
-  private dst: Float32Array;
+export class Vector4f extends Vector {
 
   constructor(x?: Float32Array | number[]) {
+    super();
+
     if (x instanceof Float32Array) {
       this.dst = x;
     } else if (Array.isArray(x)) {
@@ -85,20 +87,6 @@ export class Vector4f {
     return new Vector4f(dst);
   }
 
-  setOnes(): void {
-    this.setAllValuesTo(1);
-  }
-
-  setZeros(): void {
-    this.setAllValuesTo(0);
-  }
-
-  setAllValuesTo(a: number): void {
-    for (let i = 0; i < this.dst.length; i++) {
-      this.dst[i] = a;
-    }
-  }
-
   setVector3f(a: Vector3f): void {
     this.dst[0] = a.x;
     this.dst[1] = a.y;
@@ -109,10 +97,6 @@ export class Vector4f {
     return new Vector3f(this.dst[index], this.dst[1 + index], this.dst[2 + index]);
   }
 
-  get(): Float32Array {
-    return this.dst;
-  }
-
   clone(): Vector4f {
     const clone = new Float32Array(4);
     clone[0] = this.dst[0];
@@ -121,4 +105,6 @@ export class Vector4f {
     clone[3] = this.dst[3];
     return new Vector4f(clone);
   }
+
+
 }

@@ -18,7 +18,7 @@ export const sf = {
     MouseWheelScrolled: 7,
   },
   Mouse: {
-    setPosition: (pos: {x: number, y: number}) => {},
+    setPosition: (pos: {x: number; y: number}) => {},
     Left: 0,
     Right: 1,
   },
